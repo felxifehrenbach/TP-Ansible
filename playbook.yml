@@ -1,0 +1,39 @@
+- hosts: server
+  tasks:
+    - name: Installation nginx sur les trois containers
+      apt: pkg=nginx state=installed update_cache=true
+
+    - service:
+        name: nginx
+        state: started
+
+    - name: installation Gitet Curl
+      apt: name=git state=latest
+
+      apt: name=curl state=latest
+
+    - name: update Nodejs et npm
+      shell: curl -sL https://deb.nodesource.com/setup_8.x | sh
+
+      apt: name=nodejs state=latest
+
+    - name: cloner le repository
+      git: repo=https://git.mrzee.fr/student/my-node-project.git dest=/var/www/my-node-project
+
+    - name: installer les dependences
+      npm:
+        path: /var/www/my-node-project/myapp/
+
+    - name: installer pm2
+      npm:
+         name: pm2
+         global=true
+
+    - name: lancement de l application
+      shell: pm2 start /var/www/my-node-project/myapp/bin/www
+
+    - name: copy vhost to nginx sites-enabled
+      shell: cp /var/www/my-node-project/vhost /etc/nginx/sites-enabled/default
+
+    - name: restart nginx
+      shell: service nginx restart
